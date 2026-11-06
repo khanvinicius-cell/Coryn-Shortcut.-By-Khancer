@@ -1,0 +1,1 @@
+# Coryn-Shortcut.-By-Khancer
