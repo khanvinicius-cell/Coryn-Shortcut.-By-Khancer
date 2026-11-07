@@ -37,7 +37,6 @@ class FloatingWindowService : Service() {
     private var panelParams: WindowManager.LayoutParams? = null
     private var bubbleParams: WindowManager.LayoutParams? = null
     private var resizing = false
-    private var resizeHandle: View? = null
     private var downX = 0f
     private var downY = 0f
     private var startW = 0
@@ -139,7 +138,7 @@ class FloatingWindowService : Service() {
         val height = if (landscape) (metrics.heightPixels * 0.88f).toInt() else (metrics.heightPixels * 0.78f).toInt()
 
         val root = FrameLayout(this).apply {
-            background = rounded(0xFFF9FBFC.toInt(), dp(16), 0xFFD8E2E8.toInt())
+            background = rounded(0xFFF9FBFC.toInt(), dp(16).toFloat(), 0xFFD8E2E8.toInt())
             elevation = dp(12).toFloat()
         }
         val column = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
@@ -219,8 +218,6 @@ class FloatingWindowService : Service() {
             setOnTouchListener { _, event -> handleResize(root, event) }
         }
         val handleParams = FrameLayout.LayoutParams(dp(30), dp(30), Gravity.BOTTOM or Gravity.END)
-        handle.visibility = View.GONE
-        resizeHandle = handle
         root.addView(handle, handleParams)
 
         val params = WindowManager.LayoutParams(
@@ -269,12 +266,7 @@ class FloatingWindowService : Service() {
     }
 
     private fun toggleResizeMode() {
-        val handle = resizeHandle ?: return
-        val enable = handle.visibility != View.VISIBLE
-        handle.visibility = if (enable) View.VISIBLE else View.GONE
-        if (enable) {
-            Toast.makeText(this, "Arraste a alça no canto inferior direito para redimensionar", Toast.LENGTH_SHORT).show()
-        }
+        Toast.makeText(this, "Arraste a alça no canto inferior direito para redimensionar", Toast.LENGTH_SHORT).show()
     }
 
     private fun control(label: String, color: Int = 0xFF263238.toInt(), action: () -> Unit): TextView =
@@ -288,21 +280,18 @@ class FloatingWindowService : Service() {
         }
 
     private fun confirmClose() {
-        val dialog = android.app.AlertDialog.Builder(this)
+        android.app.AlertDialog.Builder(this)
             .setTitle("Fechar Coryn Float?")
             .setMessage("O botão flutuante e a janela do Coryn Club serão encerrados.")
             .setNegativeButton("Cancelar", null)
             .setPositiveButton("Fechar") { _, _ -> stopSelf() }
-            .create()
-        dialog.window?.setType(overlayType())
-        dialog.show()
+            .show()
     }
 
     private fun hidePanel() {
         panel?.let { try { wm.removeView(it) } catch (_: Exception) {} }
         panel = null
         panelParams = null
-        resizeHandle = null
         web?.destroy()
         web = null
     }
